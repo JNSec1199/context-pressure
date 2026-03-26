@@ -1,0 +1,99 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggered when you push a tag like v1.0.0
+
+jobs:
+  build:
+    runs-on: macos-14  # Apple Silicon runner
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build universal binary
+        run: |
+          # Build for arm64
+          swiftc \
+            -target arm64-apple-macosx14.0 \
+            -sdk $(xcrun --show-sdk-path) \
+            -framework SwiftUI \
+            -framework AppKit \
+            -framework UserNotifications \
+            -parse-as-library \
+            ContextPressure/App/ContextPressureApp.swift \
+            ContextPressure/App/AppVersion.swift \
+            ContextPressure/Models/Models.swift \
+            ContextPressure/Services/ContextMonitor.swift \
+            ContextPressure/Services/SessionParser.swift \
+            ContextPressure/Services/NotificationManager.swift \
+            ContextPressure/Services/FloatingPanelManager.swift \
+            ContextPressure/Services/AlertBannerManager.swift \
+            ContextPressure/Services/UpdateChecker.swift \
+            ContextPressure/Views/PressureGaugeView.swift \
+            ContextPressure/Views/MenuBarView.swift \
+            ContextPressure/Views/ActivityFeedView.swift \
+            ContextPressure/Views/AboutView.swift \
+            -o ContextPressure_arm64
+
+          # Build for x86_64
+          swiftc \
+            -target x86_64-apple-macosx14.0 \
+            -sdk $(xcrun --show-sdk-path) \
+            -framework SwiftUI \
+            -framework AppKit \
+            -framework UserNotifications \
+            -parse-as-library \
+            ContextPressure/App/ContextPressureApp.swift \
+            ContextPressure/App/AppVersion.swift \
+            ContextPressure/Models/Models.swift \
+            ContextPressure/Services/ContextMonitor.swift \
+            ContextPressure/Services/SessionParser.swift \
+            ContextPressure/Services/NotificationManager.swift \
+            ContextPressure/Services/FloatingPanelManager.swift \
+            ContextPressure/Services/AlertBannerManager.swift \
+            ContextPressure/Services/UpdateChecker.swift \
+            ContextPressure/Views/PressureGaugeView.swift \
+            ContextPressure/Views/MenuBarView.swift \
+            ContextPressure/Views/ActivityFeedView.swift \
+            ContextPressure/Views/AboutView.swift \
+            -o ContextPressure_x86_64
+
+          # Create universal binary
+          lipo -create ContextPressure_arm64 ContextPressure_x86_64 -output ContextPressure_universal
+
+      - name: Package .app bundle
+        run: |
+          mkdir -p "Context Pressure.app/Contents/MacOS"
+          mkdir -p "Context Pressure.app/Contents/Resources"
+          cp ContextPressure_universal "Context Pressure.app/Contents/MacOS/ContextPressure"
+          cp ContextPressure/Resources/Info.plist "Context Pressure.app/Contents/"
+
+          # Create zip for distribution
+          zip -r "Context-Pressure-${{ github.ref_name }}.zip" "Context Pressure.app"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Context Pressure ${{ github.ref_name }}"
+          body: |
+            ## Context Pressure ${{ github.ref_name }}
+
+            AI Context Window Monitor for Claude Code.
+
+            ### Installation
+            1. Download `Context-Pressure-${{ github.ref_name }}.zip`
+            2. Unzip and drag `Context Pressure.app` to your Applications folder
+            3. Launch the app — it appears in your menu bar
+
+            ### Requirements
+            - macOS 14.0 (Sonoma) or later
+            - Universal binary (Apple Silicon + Intel)
+          files: |
+            Context-Pressure-${{ github.ref_name }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

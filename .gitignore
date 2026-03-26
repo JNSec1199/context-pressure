@@ -1,0 +1,22 @@
+# Build artifacts
+build/DerivedData/
+build/*.zip
+*.o
+*.d
+*.swp
+
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+DerivedData/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Keep the .app in build/ out of git — it's built by CI
+build/Context Pressure.app/
