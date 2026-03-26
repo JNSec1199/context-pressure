@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'  # Triggered when you push a tag like v1.0.0
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-14  # Apple Silicon runner
