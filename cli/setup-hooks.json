@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "PreCompact": "PLACEHOLDER_PATH/hooks/pre-compact.sh",
+    "PostCompact": "PLACEHOLDER_PATH/hooks/post-compact.sh",
+    "Stop": "PLACEHOLDER_PATH/hooks/stop-context-check.sh"
+  }
+}
